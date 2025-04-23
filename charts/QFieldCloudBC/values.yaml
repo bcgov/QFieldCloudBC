@@ -27,7 +27,14 @@ global:
   security: 
     allowInsecureImages: true
 
-
+app:
+  enabled: False
+  image:
+    registry: ghcr.io
+    repository: 'bcgov/qfieldcloudbc/docker-app:latest'
+    tag: latest
+  env:
+    
 bitnamipg:
   enabled: False
   image:
