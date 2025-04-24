@@ -29,12 +29,67 @@ global:
 
 app:
   enabled: False
+  deploymentStrategy: Recreate
+  autoscaling:
+    #-- enable or disable autoscaling.
+    enabled: false
+    #-- the minimum number of replicas.
+    minReplicas: 3
+    #-- the maximum number of replicas.
+    maxReplicas: 7
+    #-- the target cpu utilization percentage, is from request cpu and NOT LIMIT CPU.
+    targetCPUUtilizationPercentage: 80
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  pdb:
+    enabled: false # enable it in PRODUCTION for having pod disruption budget.
+    minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   image:
     registry: ghcr.io
     repository: 'bcgov/qfieldcloudbc/docker-app:latest'
     tag: latest
   env:
-    
+    DJANGO_ALLOWED_HOSTS: "example.com,localhost"
+    DJANGO_SETTINGS_MODULE: "your_project.settings"
+    SECRET_KEY: "change_this_to_a_very_secret_key"
+    DEBUG: "False"
+    ENVIRONMENT: "production"
+    SENTRY_DSN: ""
+    SENTRY_RELEASE: ""
+    SENTRY_ENVIRONMENT: "production"
+    SENTRY_SAMPLE_RATE: "1.0"
+    POSTGRES_DB: "your_db_name"
+    POSTGRES_DB_TEST: "test_your_db_name"
+    POSTGRES_USER: "your_db_user"
+    POSTGRES_PASSWORD: ""
+    POSTGRES_HOST: "your-postgres-service"
+    POSTGRES_PORT: "5432"
+    POSTGRES_SSLMODE: "require"
+    STORAGE_ACCESS_KEY_ID: ""
+    STORAGE_SECRET_ACCESS_KEY: ""
+    STORAGE_BUCKET_NAME: ""
+    STORAGE_REGION_NAME: ""
+    STORAGE_ENDPOINT_URL: ""
+    STORAGES: ""
+    STORAGES_PROJECT_DEFAULT_STORAGE: ""
+    QFIELDCLOUD_DEFAULT_NETWORK: "default-network"
+    QFIELDCLOUD_PASSWORD_LOGIN_DISABLED: "False"
+    GEODB_HOST: ""
+    GEODB_PORT: ""
+    GEODB_USER: ""
+    GEODB_PASSWORD: ""
+    GEODB_DB: ""
+    ACCOUNT_EMAIL_VERIFICATION: "mandatory"
+    EMAIL_HOST: ""
+    EMAIL_USE_TLS: "True"
+    EMAIL_USE_SSL: "False"
+    EMAIL_PORT: "587"
+    EMAIL_HOST_USER: ""
+    EMAIL_HOST_PASSWORD: ""
+    DEFAULT_FROM_EMAIL: ""  
 bitnamipg:
   enabled: False
   image:
