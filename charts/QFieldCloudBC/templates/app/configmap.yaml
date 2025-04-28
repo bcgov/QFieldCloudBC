@@ -1,0 +1,10 @@
+{{- if .Values.app.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app.fullname" . }}-config
+data:
+{{- range $key, $value := .Values.app.configMap.data }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,102 @@
+{{- if .Values.app.enabled }}
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Generate the deployment name based on the Helm release name and chart name
+  # using the standard fullname helper from _helpers.tpl
+  name: {{ include "app.fullname" . }}
+  labels:
+    # Include standard chart labels defined in _helpers.tpl
+    {{ include "app.labels" . | nindent 4 }}
+spec:
+  # Define how the deployment finds its pods
+  selector:
+    matchLabels:
+      {{ include "app.selectorLabels" . | nindent 6 }}
+  # Set the desired number of pods, defaulting to 1 if not specified in values.yaml
+  replicas: {{ .Values.app.replicaCount | default 1 }}
+  {{- with .Values.app.deploymentStrategy }} 
+  strategy: 
+    {{- toYaml . | nindent 4 }} # <-- Use '.' here, as inside 'with', '.' is the value of .Values.app.deploymentStrategy
+  {{- end }}
+  template:
+    metadata:
+      # Pod labels - used by the deployment selector. Should match the selector labels.
+      labels:
+        {{ include "app.selectorLabels" . | nindent 8 }}
+      # Pod annotations - useful for sidecars, metrics, triggering restarts, etc.
+      # Configure this in values.yaml under .Values.app.podAnnotations
+      annotations:
+        # Example: Add an annotation to trigger a restart when the main configmap changes
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.app.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      # Pod specification
+      # imagePullSecrets: # If your image requires authentication from a private registry
+      # Configure this in values.yaml (e.g., .Values.imagePullSecrets or .Values.app.imagePullSecrets)
+      # {{- with .Values.imagePullSecrets }}
+      # imagePullSecrets:
+      #   {{- toYaml . | nindent 8 }}
+      # {{- end }}
+      # serviceAccountName: {{ include "app.serviceAccountName" . }} # Use the standard service account helper
+
+      containers:
+        # Define the main application container
+        - name: {{ include "app.name" . }} # Container name, often based on chart name
+          # Image definition using values from values.yaml
+          image: "{{.Values.app.image.registry}}/{{ .Values.app.image.repository }}:{{ .Values.app.image.tag | default .Chart.AppVersion }}" # Get repo and tag, fallback to Chart.AppVersion if tag is missing
+          imagePullPolicy: {{ .Values.app.image.pullPolicy | default "IfNotPresent" }} # Get pull policy, fallback to IfNotPresent
+
+          # Environment variables from the 'env' map in values.yaml under 'app'
+          env:
+          {{- range $key, $value := .Values.app.env }} # Loop over the env map defined in .Values.app.env
+            - name: {{ $key }}
+              value: {{ $value | quote }} # Set name and value, quoting the value
+          {{- end }}
+
+          # Ports the container exposes
+          ports:
+            # Define container ports, typically as a list in values.yaml under .Values.app.containerPorts
+            # Or, fall back to the service port if no specific containerPorts list is provided
+            {{- with .Values.app.containerPorts }}
+            {{- toYaml . | nindent 12 }}
+            {{- else }}
+            - name: http # Use a standard name
+              containerPort: {{ .Values.app.service.port }} # Get the port from .Values.app.service.port
+              protocol: TCP
+            {{- end }}
+
+
+
+          # Volume mounts if your container needs to access volumes (e.g., config, data)
+          # Configure this in values.yaml under .Values.app.volumeMounts
+          # {{- with .Values.app.volumeMounts }}
+          # volumeMounts:
+          #   {{- toYaml . | nindent 12 }}
+          # {{- end }}
+
+      # Define volumes for the pod if needed (e.g., to hold configmaps, secrets, persistent storage)
+      # Configure this in values.yaml under .Values.app.volumes
+      # volumes:
+      #   {{- with .Values.app.volumes }}
+      #   {{- toYaml . | nindent 8 }}
+      #   {{- end }}
+
+      # Configure node selection, tolerations, affinity etc. if needed
+      # Configure these in values.yaml under .Values.app
+      # {{- with .Values.app.nodeSelector }}
+      # nodeSelector:
+      #   {{- toYaml . | nindent 8 }}
+      # {{- end }}
+      # {{- with .Values.app.affinity }}
+      # affinity:
+      #   {{- toYaml . | nindent 8 }}
+      # {{- end }}
+      # {{- with .Values.app.tolerations }}
+      # tolerations:
+      #   {{- toYaml . | nindent 8 }}
+      # {{- end }}
+{{- end }}
