@@ -29,20 +29,11 @@ spec:
       # Configure this in values.yaml under .Values.app.podAnnotations
       annotations:
         # Example: Add an annotation to trigger a restart when the main configmap changes
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/app/configmap.yaml") . | sha256sum }}
         {{- with .Values.app.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      # Pod specification
-      # imagePullSecrets: # If your image requires authentication from a private registry
-      # Configure this in values.yaml (e.g., .Values.imagePullSecrets or .Values.app.imagePullSecrets)
-      # {{- with .Values.imagePullSecrets }}
-      # imagePullSecrets:
-      #   {{- toYaml . | nindent 8 }}
-      # {{- end }}
-      # serviceAccountName: {{ include "app.serviceAccountName" . }} # Use the standard service account helper
-
       containers:
         # Define the main application container
         - name: {{ include "app.name" . }} # Container name, often based on chart name
