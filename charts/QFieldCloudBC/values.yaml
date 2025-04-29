@@ -26,10 +26,14 @@ global:
   #databaseAlias: postgres-crunchy #uncomment when using crunchy and comment above.
   security: 
     allowInsecureImages: true
-
-app:
+qgis:
   enabled: False
-  deploymentStrategy: Recreate
+  configMap:
+    enabled: False
+app:
+  enabled: True
+  deploymentStrategy:
+    type: Recreate
   autoscaling:
     #-- enable or disable autoscaling.
     enabled: false
