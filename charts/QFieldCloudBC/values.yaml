@@ -53,7 +53,7 @@ app:
     minAvailable: 1 # the minimum number of pods that must be available during the disruption budget.
   image:
     registry: ghcr.io
-    repository: 'bcgov/qfieldcloudbc/docker-app:latest'
+    repository: 'bcgov/qfieldcloudbc/docker-app'
     tag: latest
   env:
     DJANGO_ALLOWED_HOSTS: "example.com,localhost"
