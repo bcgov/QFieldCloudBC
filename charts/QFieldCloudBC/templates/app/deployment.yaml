@@ -40,7 +40,18 @@ spec:
           # Image definition using values from values.yaml
           image: "{{.Values.app.image.registry}}/{{ .Values.app.image.repository }}:{{ .Values.app.image.tag | default .Chart.AppVersion }}" # Get repo and tag, fallback to Chart.AppVersion if tag is missing
           imagePullPolicy: {{ .Values.app.image.pullPolicy | default "IfNotPresent" }} # Get pull policy, fallback to IfNotPresent
-
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              gunicorn \
+                qfieldcloud.wsgi:application \
+                --bind 0.0.0.0:8000 \
+                --timeout ${GUNICORN_TIMEOUT_S} \
+                --max-requests ${GUNICORN_MAX_REQUESTS} \
+                --workers ${GUNICORN_WORKERS} \
+                --threads ${GUNICORN_THREADS}
           # Environment variables from the 'env' map in values.yaml under 'app'
           env:
           {{- range $key, $value := .Values.app.env }} # Loop over the env map defined in .Values.app.env
@@ -59,7 +70,8 @@ spec:
               containerPort: {{ .Values.app.service.port }} # Get the port from .Values.app.service.port
               protocol: TCP
             {{- end }}
-
+          resources:
+        {{- toYaml .Values.app.resources | nindent 12 }}
 
 
           # Volume mounts if your container needs to access volumes (e.g., config, data)

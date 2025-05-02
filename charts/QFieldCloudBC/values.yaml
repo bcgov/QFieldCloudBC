@@ -43,6 +43,13 @@ app:
     maxReplicas: 7
     #-- the target cpu utilization percentage, is from request cpu and NOT LIMIT CPU.
     targetCPUUtilizationPercentage: 80
+  resources:
+    requests:
+      cpu: 250m # 0.1 CPU
+      memory: 128Mi
+    limits:
+      cpu: 500m # 0.5 CPU
+      memory: 512Mi
   service:
     enabled: true
     type: ClusterIP
