@@ -1,6 +1,7 @@
 name: Build and Publish
-on: 
-  workflow_dispatch:
+
+on:
+  workflow_dispatch: # Manual trigger
 
 jobs:
   # https://github.com/bcgov-nr/action-builder-ghcr
@@ -9,13 +10,63 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        # package: [backend, frontend, migrations]
+        # Include all packages in the matrix
         package: [docker-qgis, docker-nginx, docker-createbuckets, docker-app]
     timeout-minutes: 10
+
     steps:
-      - uses: bcgov-nr/action-builder-ghcr@v2.3.0
+      # Step 1: Checkout code - needed for both actions to access the repository files
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Docker Buildx - recommended for docker/build-push-action for better performance and features
+      # This step can run unconditionally as it's needed for the docker-app build and is harmless for others.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3: Log in to the Container registry - needed for both actions to push images
+      # This step can run unconditionally.
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Use the default GITHUB_TOKEN secret for authentication
+
+      # Step 4: Build using bcgov-nr/action-builder-ghcr for packages *other than* docker-app
+      # This step will only execute if the current matrix.package is not 'docker-app'.
+      - name: Build and push ${{ matrix.package }} using bcgov action
+        if: matrix.package != 'docker-app'
+        uses: bcgov-nr/action-builder-ghcr@v2.3.0
         with:
           keep_versions: 5
           package: ${{ matrix.package }}
           tag: latest
           tag_fallback: latest
+
+      # Step 5: Build and push docker-app using the standard docker/build-push-action@v6
+      # This step will only execute when the current matrix.package is 'docker-app'. 
+      # Need to use this builder since the bcgov-nr/action-builder-ghr does not provide for target stage
+      - name: Build and push docker-app using docker/build-push-action
+        if: matrix.package == 'docker-app'
+        uses: docker/build-push-action@v6
+        with:
+          # Specify the build context for the docker-app
+          context: ./docker-app
+          # Specify the path to the Dockerfile for the docker-app
+          file: ./docker-app/Dockerfile
+          # Set push to true to upload the built image to the registry
+          push: true
+          # Define the tags for the built image.
+          tags: |
+            ghcr.io/${{ github.repository }}/docker-app:latest
+          # --- Specify the target build stage here ---
+          # Replace 'webserver_runtime' with the desired target stage name from your Dockerfile.
+          target: webserver_runtime
+          # Add caching for faster builds using GitHub Actions cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # If you have build arguments defined in your Dockerfile using ARG,
+          # you can pass them here using the build-args input:
+          # build-args: |
+          #   DEBUG_BUILD=1 # Example build argument
