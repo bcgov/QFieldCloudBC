@@ -54,7 +54,7 @@ spec:
                 --threads ${GUNICORN_THREADS}
           # Environment variables from the 'env' map in values.yaml under 'app'
           env:
-          {{- range $key, $value := .Values.app.env }} # Loop over the env map defined in .Values.app.env
+          {{- range $key, $value := .Values.global.env }} # Loop over the env map defined in .Values.global.env
             - name: {{ $key }}
               value: {{ $value | quote }} # Set name and value, quoting the value
           {{- end }}
