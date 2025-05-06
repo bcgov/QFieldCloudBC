@@ -12,7 +12,7 @@ jobs:
       matrix:
         # Include all packages in the matrix
         package: [docker-qgis, docker-nginx, docker-createbuckets, docker-app, worker_wrapper]
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       # Step 1: Checkout code - needed for both actions to access the repository files
