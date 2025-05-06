@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         # Include all packages in the matrix
-        package: [docker-qgis, docker-nginx, docker-createbuckets, docker-app]
+        package: [docker-qgis, docker-nginx, docker-createbuckets, docker-app, worker_wrapper]
     timeout-minutes: 10
 
     steps:
@@ -36,7 +36,7 @@ jobs:
       # Step 4: Build using bcgov-nr/action-builder-ghcr for packages *other than* docker-app
       # This step will only execute if the current matrix.package is not 'docker-app'.
       - name: Build and push ${{ matrix.package }} using bcgov action
-        if: matrix.package != 'docker-app'
+        if: matrix.package != 'docker-app' || 'worker_wrapper'
         uses: bcgov-nr/action-builder-ghcr@v2.3.0
         with:
           keep_versions: 5
@@ -63,6 +63,32 @@ jobs:
           # --- Specify the target build stage here ---
           # Replace 'webserver_runtime' with the desired target stage name from your Dockerfile.
           target: webserver_runtime
+          # Add caching for faster builds using GitHub Actions cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # If you have build arguments defined in your Dockerfile using ARG,
+          # you can pass them here using the build-args input:
+          # build-args: |
+          #   DEBUG_BUILD=1 # Example build argument
+      # Step 6: Build and push worker_wrapper using the standard docker/build-push-action@v6
+      # This step will only execute when the current matrix.package is 'worker_wrapper'. 
+      # Need to use this builder since the bcgov-nr/action-builder-ghr does not provide for target stage
+      - name: Build and push worker_wrapper using docker/build-push-action
+        if: matrix.package == 'worker_wrapper'
+        uses: docker/build-push-action@v6
+        with:
+          # Specify the build context for the docker-app
+          context: ./docker-app
+          # Specify the path to the Dockerfile for the docker-app
+          file: ./docker-app/Dockerfile
+          # Set push to true to upload the built image to the registry
+          push: true
+          # Define the tags for the built image.
+          tags: |
+            ghcr.io/${{ github.repository }}/docker-nginx:latest
+          # --- Specify the target build stage here ---
+          # Replace 'webserver_runtime' with the desired target stage name from your Dockerfile.
+          target: worker_wrapper_runtime
           # Add caching for faster builds using GitHub Actions cache
           cache-from: type=gha
           cache-to: type=gha,mode=max

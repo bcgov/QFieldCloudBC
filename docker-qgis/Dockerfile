@@ -74,5 +74,6 @@ RUN pip3 install --break-system-packages --use-deprecated=legacy-resolver -r /tm
 COPY schemas schemas
 COPY qfc_worker qfc_worker
 COPY entrypoint.py .
+RUN echo \"$@\"
 
 ENTRYPOINT ["/bin/sh", "-c", "/usr/bin/xvfb-run -a \"$@\"", ""]
