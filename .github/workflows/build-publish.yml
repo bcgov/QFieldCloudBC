@@ -44,7 +44,14 @@ jobs:
           tag: latest
           tag_fallback: latest
 
-      # Step 5: Build and push docker-app using the standard docker/build-push-action@v6
+      # Step 5: Set the repository name in lowercase for use in docker tags
+      - name: Lowercase repo name
+        # This step is used to set the repository name in lowercase for use in docker tags.
+        # The @L modifier is used to convert the repository name to lowercase.
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY@L}" >> ${GITHUB_ENV}
+          
+      # Step 6: Build and push docker-app using the standard docker/build-push-action@v6
       # This step will only execute when the current matrix.package is 'docker-app'. 
       # Need to use this builder since the bcgov-nr/action-builder-ghr does not provide for target stage
       - name: Build and push docker-app using docker/build-push-action
@@ -59,7 +66,7 @@ jobs:
           push: true
           # Define the tags for the built image.
           tags: |
-            ghcr.io/${{ github.repository.toLower() }}/docker-app:latest
+            ghcr.io/${{ env.REPO_NAME }}/docker-app:latest
           # --- Specify the target build stage here ---
           # Replace 'webserver_runtime' with the desired target stage name from your Dockerfile.
           target: webserver_runtime
@@ -70,7 +77,7 @@ jobs:
           # you can pass them here using the build-args input:
           # build-args: |
           #   DEBUG_BUILD=1 # Example build argument
-      # Step 6: Build and push worker_wrapper using the standard docker/build-push-action@v6
+      # Step 7: Build and push worker_wrapper using the standard docker/build-push-action@v6
       # This step will only execute when the current matrix.package is 'worker_wrapper'. 
       # Need to use this builder since the bcgov-nr/action-builder-ghr does not provide for target stage
       # - name: Build and push worker_wrapper using docker/build-push-action
