@@ -59,7 +59,7 @@ jobs:
           push: true
           # Define the tags for the built image.
           tags: |
-            ghcr.io/${{ github.repository }}/docker-app:latest
+            ghcr.io/${{ github.repository.toLower() }}/docker-app:latest
           # --- Specify the target build stage here ---
           # Replace 'webserver_runtime' with the desired target stage name from your Dockerfile.
           target: webserver_runtime
