@@ -36,7 +36,7 @@ jobs:
       # Step 4: Build using bcgov-nr/action-builder-ghcr for packages *other than* docker-app
       # This step will only execute if the current matrix.package is not 'docker-app'.
       - name: Build and push ${{ matrix.package }} using bcgov action
-        if: matrix.package != 'docker-app' || 'worker_wrapper'
+        if: matrix.package != 'docker-app' && matrix.package != 'worker_wrapper'
         uses: bcgov-nr/action-builder-ghcr@v2.3.0
         with:
           keep_versions: 5
@@ -77,15 +77,15 @@ jobs:
         if: matrix.package == 'worker_wrapper'
         uses: docker/build-push-action@v6
         with:
-          # Specify the build context for the docker-app
+          # Specify the build context for the worker_wrapper
           context: ./docker-app
-          # Specify the path to the Dockerfile for the docker-app
+          # Specify the path to the Dockerfile for the worker_wrapper
           file: ./docker-app/Dockerfile
           # Set push to true to upload the built image to the registry
           push: true
           # Define the tags for the built image.
           tags: |
-            ghcr.io/${{ github.repository }}/docker-nginx:latest
+            ghcr.io/${{ github.repository }}/worker_wrapper:latest
           # --- Specify the target build stage here ---
           # Replace 'webserver_runtime' with the desired target stage name from your Dockerfile.
           target: worker_wrapper_runtime
